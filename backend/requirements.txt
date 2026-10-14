@@ -6,3 +6,5 @@ pdfplumber
 Pillow
 pytesseract
 openpyxl
+supabase
+python-dotenv

@@ -15,6 +15,7 @@ import {
   matchesFilters,
   sourceLabel,
 } from '../lib/documents'
+import { apiFetch } from '../lib/api'
 import { collectDuplicateJobIds, dataQualityClass, fetchDuplicatesSummary } from '../lib/quality'
 
 function shortFileName(path?: string) {
@@ -58,7 +59,7 @@ export function Documents({ refreshKey, selectedJobId, onSelectJob, onDocumentDe
   const loadJobs = () => {
     setLoading(true)
     setLoadError(null)
-    Promise.all([fetch('/api/v1/jobs').then((res) => res.json()), fetchDuplicatesSummary().catch(() => null)])
+    Promise.all([apiFetch('/api/v1/jobs').then((res) => res.json()), fetchDuplicatesSummary().catch(() => null)])
       .then(([jobsData, duplicatesData]) => {
         setJobs(Array.isArray(jobsData?.jobs) ? jobsData.jobs : [])
         setDuplicateJobIds(collectDuplicateJobIds(duplicatesData))
@@ -183,7 +184,7 @@ export function Documents({ refreshKey, selectedJobId, onSelectJob, onDocumentDe
 
     setDeletingId(jobId)
     try {
-      const res = await fetch(`/api/v1/jobs/${jobId}`, { method: 'DELETE' })
+      const res = await apiFetch(`/api/v1/jobs/${jobId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
 
       if (activeJobId === jobId) setActiveJobId(null)
@@ -259,7 +260,7 @@ export function Documents({ refreshKey, selectedJobId, onSelectJob, onDocumentDe
     const failed: string[] = []
     try {
       for (const jobId of ids) {
-        const res = await fetch(`/api/v1/jobs/${jobId}`, { method: 'DELETE' })
+        const res = await apiFetch(`/api/v1/jobs/${jobId}`, { method: 'DELETE' })
         if (!res.ok) {
           failed.push(jobId)
           continue

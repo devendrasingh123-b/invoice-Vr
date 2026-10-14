@@ -1,0 +1,42 @@
+{
+  "family": "invoice-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/invoiceApiTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "invoice-api",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/invoice-api:latest",
+      "essential": true,
+      "portMappings": [{ "containerPort": 8000, "protocol": "tcp" }],
+      "environment": [
+        { "name": "SUPABASE_URL", "value": "https://tbsqnwqhgwivnytkbbce.supabase.co" },
+        { "name": "CORS_ORIGINS", "value": "https://YOUR_VERCEL_DOMAIN" }
+      ],
+      "secrets": [
+        {
+          "name": "SUPABASE_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:invoice/supabase-secret"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\""],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 40
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/invoice-api",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

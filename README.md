@@ -43,125 +43,38 @@ uvicorn app.main:app --reload --app-dir backend
 
 Swagger: <http://127.0.0.1:8000/docs>
 
-## Docker (single image)
-
-Build and run the full stack (API + UI) in one container:
+### 4) Run the UI
 
 ```bash
-docker build -t invoice-management:latest .
-docker run --rm -p 8080:8080 -v invoice-data:/app/data invoice-management:latest
+cd frontend
+npm install
+npm run dev
 ```
 
-Open the app at <http://localhost:8080>. API docs: <http://localhost:8080/api/docs>.
+Open the app at <http://127.0.0.1:5173>. The UI proxies `/api` to the API on port 8000.
 
-Or use Docker Compose:
+On Windows you can start both from the project root with `start.bat`.
+
+Copy `.env.example` to `.env` and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY`. New uploads are stored in the private Supabase bucket `invoices` as well as the local `data/` folder. A machine with no local files (the ECS container) reads from Supabase.
+
+## Deploy
+
+### Frontend on Vercel
+
+1. Import `https://github.com/devendrasingh123-b/invoice-Vr` in Vercel. Leave the root directory as the repository root (`vercel.json` builds `frontend/`).
+2. After the API has a public URL, set `VITE_API_URL` to that URL (no trailing slash) and redeploy. Vercel bakes this in at build time.
+
+### Backend on AWS ECS
+
+Build the API image from the repo root:
 
 ```bash
-docker compose up --build
+docker build -t invoice-api:latest .
 ```
 
-### Share the image
+Push it to ECR, then run the Fargate task in `deploy/ecs-task-definition.json`. Set `SUPABASE_SECRET_KEY` in Secrets Manager. Do not put that key in the image or in git. The task listens on port 8000 and serves `GET /health`.
 
-Export for offline use:
-
-```bash
-docker save invoice-management:latest -o invoice-management.tar
-```
-
-On another machine:
-
-```bash
-docker load -i invoice-management.tar
-docker run --rm -p 8080:8080 -v invoice-data:/app/data invoice-management:latest
-```
-
-Uploaded files and extracted JSON are stored in the `invoice-data` volume at `/app/data` inside the container.
-
-## Account team install (Docker pull only)
-
-For people on the account team: **no GCP, no AWS, no source code** — only Docker Desktop and a pull from Docker Hub (or similar).
-
-### What you (maintainer) do once
-
-1. Log in to [Docker Hub](https://hub.docker.com/) (repo: `yashjeetamai/invoice-finintel`).
-
-```bash
-docker login
-```
-
-2. Build and push (replace `1.0.0` with your version tag):
-
-```bash
-docker build -t yashjeetamai/invoice-finintel:1.0.0 .
-docker push yashjeetamai/invoice-finintel:1.0.0
-docker tag yashjeetamai/invoice-finintel:1.0.0 yashjeetamai/invoice-finintel:latest
-docker push yashjeetamai/invoice-finintel:latest
-```
-
-Or from the `deploy` folder on Windows:
-
-```powershell
-.\publish.ps1 -Tag "1.0.0"
-```
-
-3. Tell the team to use: `yashjeetamai/invoice-finintel:latest` (or a specific tag like `1.0.0`).
-
-### What each account team person does
-
-1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it.
-2. Run **one** of these:
-
-**Windows (PowerShell):**
-
-```powershell
-cd deploy
-.\install.ps1
-```
-
-**Mac / Linux:**
-
-```bash
-cd deploy
-chmod +x install.sh
-./install.sh
-```
-
-**Or manual (any OS):**
-
-```bash
-docker pull yashjeetamai/invoice-finintel:latest
-docker run -d --name invoice-app -p 8080:8080 -v invoice-data:/app/data yashjeetamai/invoice-finintel:latest
-```
-
-3. Open **http://localhost:8080**
-
-### Updates
-
-When you publish a new version:
-
-```bash
-docker build -t yashjeetamai/invoice-finintel:latest .
-docker push yashjeetamai/invoice-finintel:latest
-```
-
-Tell the team to run:
-
-```bash
-docker pull yashjeetamai/invoice-finintel:latest
-docker restart invoice-app
-```
-
-Or re-run `deploy\install.ps1` / `deploy/install.sh`.
-
-### Private image (optional)
-
-If the image is private on Docker Hub, each person runs **once**:
-
-```bash
-docker login
-```
-
-Use a shared **read-only** access token you create in Docker Hub (not your personal password). Still no GCP or cloud console.
+Put the load-balancer URL in Vercel as `VITE_API_URL`. Add that same site origin to `CORS_ORIGINS` if it is not a `*.vercel.app` address. `https://*.vercel.app` is already allowed.
 
 ## Repository Structure
 

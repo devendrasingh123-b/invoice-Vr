@@ -1,5 +1,4 @@
 .git
-.cursor
 .venv
 venv
 env
@@ -7,21 +6,15 @@ __pycache__
 *.py[cod]
 .pytest_cache
 .mypy_cache
-.ruff_cache
 
 frontend/node_modules
 frontend/dist
 
-data/uploads
-data/extractions
-data/index.json
-data/*_report.json
-data/*_audit.json
-data/*.xlsx
-data/exports
-
+data
 .env
 .env.*
+**/.env
+
 *.log
 README.md
 docs/

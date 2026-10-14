@@ -5,6 +5,7 @@ import { Issues } from './pages/Issues'
 import { Search } from './pages/Search'
 import { Upload } from './pages/Upload'
 import { DuplicatesPanel, TopAlerts } from './components/TopAlerts'
+import { apiFetch } from './lib/api'
 import './App.css'
 
 type Page = 'dashboard' | 'documents' | 'upload' | 'search' | 'issues'
@@ -50,7 +51,7 @@ function App() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/health')
+    apiFetch('/api/health')
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data: HealthResponse) => setBackendStatus(data.status === 'ok' ? 'ok' : 'error'))
       .catch(() => setBackendStatus('error'))

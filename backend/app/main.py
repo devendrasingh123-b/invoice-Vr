@@ -26,14 +26,21 @@ from .storage import (
 )
 
 api = FastAPI(title="Financial Document Intelligence API", version="0.1.0")
-api.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+def _cors_origins() -> list[str]:
+    defaults = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:5174",
         "http://127.0.0.1:5174",
-    ],
+    ]
+    extra = [item.strip() for item in os.getenv("CORS_ORIGINS", "").split(",") if item.strip()]
+    return defaults + extra
+
+
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins(),
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

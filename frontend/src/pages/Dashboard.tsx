@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from '../lib/api'
 import { fetchQualitySummary, type QualitySummary } from '../lib/quality'
 
 type JobSummary = {
@@ -20,7 +21,7 @@ export function Dashboard({ refreshKey = 0, onOpenIssues }: Props) {
   const [quality, setQuality] = useState<QualitySummary | null>(null)
 
   useEffect(() => {
-    fetch('/api/v1/jobs')
+    apiFetch('/api/v1/jobs')
       .then((res) => res.json())
       .then((data) => setJobs(data.jobs ?? []))
       .catch(() => setJobs([]))
